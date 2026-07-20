@@ -79,6 +79,11 @@ jobs:
           # Copy all files from assets folder
           Copy-Item -Path "assets\*" -Destination $modFolder -Recurse -Force
           
+          # Ship a copy of the patched exe as the self-heal backup used by
+          # run-p2-rtx.bat / toggle-p2-rtx.bat (Steam updates restore the
+          # vanilla portal2.exe, which would otherwise disable the mod)
+          Copy-Item -Path "assets\portal2.exe" -Destination (Join-Path $modFolder "portal2-rtx\portal2.exe.p2rtx") -Force
+
           # Copy the built p2-rtx.dll to the mod folder
           $dllPath = "build\bin\Release\p2-rtx.dll"
           if (Test-Path $dllPath) {

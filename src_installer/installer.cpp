@@ -42,6 +42,30 @@ bool file_exists(const std::string& path)
     return GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES;
 }
 
+// the p2-rtx patched portal2.exe contains the imported dll name as a plain string
+// returns 1 = has the import, 0 = vanilla, -1 = could not read the file
+int exe_p2rtx_import_state(const std::string& exe_path)
+{
+	std::error_code ec;
+	const auto size = std::filesystem::file_size(exe_path, ec);
+	if (ec || !size) {
+		return -1;
+	}
+
+	std::ifstream file(exe_path, std::ios::binary);
+	if (!file.is_open()) {
+		return -1;
+	}
+
+	std::string data(static_cast<size_t>(size), '\0');
+	file.read(data.data(), static_cast<std::streamsize>(size));
+	if (file.gcount() != static_cast<std::streamsize>(size)) {
+		return -1;
+	}
+
+	return data.find("p2-rtx.dll") != std::string::npos ? 1 : 0;
+}
+
 std::filesystem::path get_installer_dir()
 {
 	wchar_t buf[MAX_PATH] = { 0 };
@@ -545,6 +569,18 @@ int main()
 		Sleep(25);
 	}
 
+	// keep a copy of the untouched exe so the mod can be cleanly disabled later
+	// (the extracted files replace portal2.exe with the p2-rtx import-patched one)
+	// an unreadable exe must not count as vanilla - that would clobber the backup
+	if (file_exists(portal2_exe_path) && exe_p2rtx_import_state(portal2_exe_path) == 0)
+	{
+		if (CopyFileA(portal2_exe_path.c_str(), (game_dir + "\\portal2.exe.vanilla").c_str(), FALSE))
+		{
+			std::cout << "Backed up the vanilla portal2.exe to 'portal2.exe.vanilla'\n";
+		}
+		Sleep(25);
+	}
+
 	// check if comp mod and remix are installed -> update
 	const bool has_remix_comp_mod = file_exists(game_dir + "\\bin\\d3d9.dll") &&
 									file_exists(game_dir + "\\p2-rtx.dll");
@@ -672,6 +708,6 @@ int main()
 
 	std::cout << "\n\nIf you run into issues, please create an issue on the GitHub repository.\n> Please include 'portal2-rtx/logs/logfile.txt'\n> The log files from 'rtx-remix/logs'\n> A short description and anything else that might help to identify the issue.\n";
 
-	MessageBoxA(nullptr, "Installation complete!\nYou can now launch Portal 2\nby running run-p2-rtx.bat", "Success", MB_ICONINFORMATION);
+	MessageBoxA(nullptr, "Installation complete!\nYou can now launch Portal 2\nby running run-p2-rtx.bat\n\nNote: Steam updates restore the vanilla portal2.exe and disable the mod.\nrun-p2-rtx.bat detects this and repairs the install automatically.", "Success", MB_ICONINFORMATION);
     return 0;
 }

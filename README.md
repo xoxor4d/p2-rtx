@@ -87,6 +87,22 @@ for Portal 2 (`bin/.trex/NvRemixBridge.exe` & `bin/d3d9.dll`)
 
 3. Sart the game from Steam
 
+- Note: starting from Steam skips the self-repair check in `run-p2-rtx.bat`. When a Steam update for Portal 2 comes out (Steam restores the vanilla `portal2.exe`, which disables the mod), run `run-p2-rtx.bat` once to repair the install.
+
+<br></details>
+
+
+<details><summary>The mod stopped working after a Steam update</summary>
+<br>
+
+- Steam updates (and "verify integrity of game files") restore the vanilla `portal2.exe`. That removes the modification that loads `p2-rtx.dll`, so the game starts without the mod.
+
+- Run `run-p2-rtx.bat` - it detects the vanilla exe and restores the patched `portal2.exe` automatically (the vanilla exe is kept as `portal2.exe.vanilla`).
+
+- Alternatively: re-run the installer or extract the release zip over the game folder again.
+
+- Advanced: [`tools/patch_portal2_imports.py`](tools/patch_portal2_imports.py) re-applies the import patch to any vanilla `portal2.exe` (useful if the shipped exe ever goes out of date after a game update).
+
 <br></details>
 
 
